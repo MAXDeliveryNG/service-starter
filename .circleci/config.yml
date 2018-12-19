@@ -1,0 +1,100 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/service-directory
+    docker:
+      - image: circleci/node:carbon
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install dependencies
+          command: yarn install
+      - run: 
+          name: Compile Typescript Source
+          command: yarn build
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - ./dist
+            - ./node_modules
+  test:
+    docker:
+      - image: circleci/node:carbon
+
+    working_directory: ~/service-directory
+
+    steps:
+      - checkout
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ./
+      - run:
+          name: Test
+          command: yarn test
+  build_image:
+    docker:
+      - image: circleci/node:carbon
+
+    working_directory: ~/service-directory
+
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ./  
+      - run:
+          name: Build and push image
+          command: |
+            if [[ ((`echo $CIRCLE_BRANCH | grep -c "master"` > 0)) || ((`echo $CIRCLE_BRANCH | grep -c "staging"` > 0)) ]]; then
+              echo "Authenticating with Docker registry"
+              make login
+              echo "Building docker image"
+              export DEPLOY_BRANCH=${CIRCLE_BRANCH}
+              echo "Building image for ${DEPLOY_BRANCH}"
+              make build push
+            else
+              echo "Skip Docker push image since it is not the master or staging branch"
+            fi
+
+  deploy:
+    docker:
+      - image: mrfoh/azurecli-helm
+
+    working_directory: ~/service-directory
+    
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Deploy to AKS
+          command: |
+              if [[ ((`echo $CIRCLE_BRANCH | grep -c "master"` > 0))]]; then
+                echo "Deploying to production"
+                export DEPLOY_TARGET=production
+                ./deploy/cluster-deploy.sh
+              elif [[ ((`echo $CIRCLE_BRANCH | grep -c "staging"` > 0)) ]]; then
+                echo "Deploying to staging"
+                export DEPLOY_TARGET=staging
+                ./deploy/cluster-deploy.sh
+              else
+                echo "Nothing to deploy"
+              fi
+
+workflows:
+  version: 2
+  pipeline:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - build_image:
+          requires:
+            - test
+      - deploy:
+          requires:
+            - build_image

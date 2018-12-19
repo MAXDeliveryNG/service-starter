@@ -1,0 +1,8 @@
+node_modules
+src
+helm
+deploy
+.vscode
+.circleci
+.data
+coverage

@@ -1,0 +1,45 @@
+{
+  "name": "service-starter",
+  "version": "1.0.0",
+  "description": "A starter template for building MAX microservices",
+  "main": "index.js",
+  "repository": "git@github.com:MAXDeliveryNG/service-starter.git",
+  "author": "Patrick Foh <patrickfoh@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^22.2.3",
+    "jest": "^23.0.1",
+    "ts-jest": "^22.4.6",
+    "typescript": "^2.8.3"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "bunyan": "^1.8.12",
+    "express": "^4.16.3",
+    "inversify": "^4.13.0",
+    "moment": "^2.22.1",
+    "prom-client": "^11.0.0",
+    "reflect-metadata": "^0.1.12",
+    "uuid": "^3.2.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "verbose": true,
+    "collectCoverage": true,
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/typings"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ]
+  }
+}
